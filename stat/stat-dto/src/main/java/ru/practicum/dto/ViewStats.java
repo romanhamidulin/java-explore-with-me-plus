@@ -10,10 +10,7 @@ import lombok.*;
 @Setter
 @ToString
 public class ViewStats {
-    @NotBlank
     private String app;
-    @NotBlank
     private String uri;
-    @NotBlank
     private Long hits;
 }
