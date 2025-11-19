@@ -20,7 +20,7 @@ public class EndpointHitDto {
     private String uri;
     @NotBlank
     @Pattern(
-            regexp = "^((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)\\.(?!$)|$){4}$",
+            regexp = "^((25[0-5]|(2[0-4]|1[0-9]|[1-9]|)[0-9])(\\.(?!$)|$)){4}$",
             message = "Не верный формат IP адреса"
     )
     private String ip;
