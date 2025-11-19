@@ -1,4 +1,3 @@
-FROM ubuntu:latest
-LABEL authors="roman"
-
-ENTRYPOINT ["top", "-b"]
+FROM amazoncorretto:21
+COPY target/*.jar stat-server.jar
+ENTRYPOINT ["java", "-jar", "/stat-server.jar"]
