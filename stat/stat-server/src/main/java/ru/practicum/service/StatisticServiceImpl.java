@@ -1,10 +1,11 @@
-package ru.practicum;
+package ru.practicum.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import ru.practicum.repository.StatisticRepository;
 import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStats;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,11 +20,10 @@ import java.util.List;
 @Transactional
 public class StatisticServiceImpl implements StatisticService {
     private final StatisticRepository repository;
-    private final StatisticMapper mapper;
 
     @Override
-    public void saveStatistic(EndpointHitDto dto) {
-        repository.save(mapper.toStatistic(dto));
+    public void saveHit(EndpointHitDto dto) {
+        repository.save(StatisticMapper.toStatistic(dto));
     }
 
     @Override

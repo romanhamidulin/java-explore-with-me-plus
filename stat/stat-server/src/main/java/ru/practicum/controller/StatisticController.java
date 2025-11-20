@@ -1,17 +1,20 @@
-package ru.practicum;
+package ru.practicum.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.service.StatisticService;
 import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStats;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Validated
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -20,9 +23,9 @@ public class StatisticController {
 
     @PostMapping("/hit")
     @ResponseStatus(HttpStatus.CREATED)
-    public void saveStatistic(@Valid @RequestBody EndpointHitDto dto) {
+    public void saveHit(@Valid @RequestBody EndpointHitDto dto) {
         log.info("POST hit {}", dto);
-        service.saveStatistic(dto);
+        service.saveHit(dto);
     }
 
     @GetMapping("/stats")

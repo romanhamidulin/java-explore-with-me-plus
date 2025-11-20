@@ -1,4 +1,4 @@
-package ru.practicum;
+package ru.practicum.service;
 
 import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStats;
@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface StatisticService {
-    void saveStatistic(EndpointHitDto dto);
+    void saveHit(EndpointHitDto dto);
 
     List<ViewStats> getStatistics(LocalDateTime start,
                                   LocalDateTime end,

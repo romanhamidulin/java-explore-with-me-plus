@@ -1,9 +1,9 @@
 package ru.practicum.model;
 
-import org.springframework.stereotype.Component;
+import lombok.experimental.UtilityClass;
 import ru.practicum.dto.EndpointHitDto;
 
-@Component
+@UtilityClass
 public class StatisticMapper {
     public Statistic toStatistic(EndpointHitDto dto) {
         Statistic stat = new Statistic();
