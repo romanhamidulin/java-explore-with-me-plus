@@ -8,9 +8,9 @@ services:
     depends_on:
       - stats-db
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/stat
-      - SPRING_DATASOURCE_USERNAME=stat-db
-      - SPRING_DATASOURCE_PASSWORD=stat-db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/stats
+      - SPRING_DATASOURCE_USERNAME=stats
+      - SPRING_DATASOURCE_PASSWORD=stats
 
   stats-db:
     image: postgres:16.1
@@ -19,9 +19,9 @@ services:
       - "15432:5432"
 
     environment:
-      - POSTGRES_PASSWORD=stat-db
-      - POSTGRES_USER=stat-db
-      - POSTGRES_DB=stat-db
+      - POSTGRES_PASSWORD=stats
+      - POSTGRES_USER=stats
+      - POSTGRES_DB=stats
     healthcheck:
       test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
       timeout: 5s
