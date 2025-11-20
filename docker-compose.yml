@@ -9,18 +9,20 @@ services:
       - stats-db
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/stat
-      - SPRING_DATASOURCE_USERNAME=stat
-      - SPRING_DATASOURCE_PASSWORD=stat
+      - SPRING_DATASOURCE_USERNAME=stat-db
+      - SPRING_DATASOURCE_PASSWORD=stat-db
 
   stats-db:
     image: postgres:16.1
     container_name: stats-db
     ports:
-      - "6541:5432"
+      - "15432:5432"
+    volumes:
+      - statData:/var/lib/postgresql/data/
     environment:
-      - POSTGRES_PASSWORD=stat
-      - POSTGRES_USER=stat
-      - POSTGRES_DB=stat
+      - POSTGRES_PASSWORD=stat-db
+      - POSTGRES_USER=stat-db
+      - POSTGRES_DB=stat-db
     healthcheck:
       test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
       timeout: 5s
@@ -34,5 +36,32 @@ services:
     ports:
       - "8080:8080"
 
+    depends_on:
+        - ewm-db
+    environment:
+        - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm-db
+        - SPRING_DATASOURCE_USERNAME=ewm-db
+        - SPRING_DATASOURCE_PASSWORD=secret
+
   ewm-db:
     image: postgres:16.1
+    container_name: ewm-db
+    ports:
+     - "25432:5432"
+    volumes:
+          - mainData:/var/lib/postgresql/data/
+    environment:
+          - POSTGRES_DB=ewm-db
+          - POSTGRES_USER=ewm-db
+          - POSTGRES_PASSWORD=secret
+    healthcheck:
+          test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
+          timeout: 5s
+          interval: 5s
+          retries: 10
+
+volumes:
+  statData:
+    driver: local
+  mainData:
+    driver: local

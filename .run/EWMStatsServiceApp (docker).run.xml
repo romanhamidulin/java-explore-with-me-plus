@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="EWMStatsServiceApp (docker)" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
-    <module name="stat-service" />
+    <module name="stat-server" />
     <option name="SPRING_BOOT_MAIN_CLASS" value="ru.practicum.StatisticServer" />
     <extension name="coverage">
       <pattern>

@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="EWMStatsServiceApp" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
     <option name="ACTIVE_PROFILES" value="local" />
-    <module name="stat-service" />
+    <module name="stat-server" />
     <option name="SPRING_BOOT_MAIN_CLASS" value="ru.practicum.StatisticServer" />
     <extension name="coverage">
       <pattern>
