@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
@@ -30,7 +31,6 @@ public class StatClient {
                 .build();
     }
 
-    @PostMapping("/hit")
     public void hit(@RequestBody @Valid EndpointHitDto dto) {
         String url = UriComponentsBuilder
                 .fromHttpUrl(statUrl)
@@ -62,9 +62,8 @@ public class StatClient {
         }
     }
 
-    @GetMapping("/stat")
-    public ResponseEntity<List<ViewStats>> getStats(@RequestParam(name = "start") LocalDateTime start,
-                                                    @RequestParam(name = "end") LocalDateTime end,
+    public ResponseEntity<List<ViewStats>> getStats(@RequestParam(name = "start") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
+                                                    @RequestParam(name = "end") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
                                                     @RequestParam(name = "uris", required = false) List<String> uris,
                                                     @RequestParam(name = "unique", required = false) Boolean unique) {
         UriComponentsBuilder builder = UriComponentsBuilder
