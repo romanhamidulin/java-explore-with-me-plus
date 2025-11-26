@@ -25,7 +25,7 @@ public class UserServiceImpl implements UserService {
         if (request.getIds() == null || request.getIds().isEmpty()) {
             return userRepository.findAll(pageable).stream().map(UserMapper::toUserDto).toList();
         }
-        return userRepository.findAllById(request.getIds(), pageable).stream().map(UserMapper::toUserDto).toList();
+        return userRepository.findByIdIn(request.getIds(), pageable).stream().map(UserMapper::toUserDto).toList();
     }
 
     @Override
