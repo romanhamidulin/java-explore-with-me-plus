@@ -23,8 +23,7 @@ public class UserAdminController {
                                   @RequestParam(defaultValue = "0") int from,
                                   @RequestParam(defaultValue = "10") int size
     ) {
-        UserRequest userRequest = new UserRequest(ids,from,size);
-        return userService.getUsers(userRequest);
+        return userService.getUsers(new UserRequest(ids,from,size));
     }
 
     @PostMapping

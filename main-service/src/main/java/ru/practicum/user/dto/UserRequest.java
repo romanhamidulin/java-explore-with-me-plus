@@ -4,16 +4,10 @@ import lombok.*;
 
 import java.util.List;
 
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
 public class UserRequest {
     private List<Long> ids;
     private Integer from;
     private Integer size;
-
-    public UserRequest(List<Long> ids, Integer from, Integer size) {
-        this.ids = ids;
-        this.from = from;
-        this.size = size;
-    }
 }
