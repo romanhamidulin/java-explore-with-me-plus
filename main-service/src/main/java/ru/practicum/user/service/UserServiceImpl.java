@@ -14,8 +14,6 @@ import ru.practicum.user.mapper.UserMapper;
 import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
 
-import java.util.List;
-
 @RequiredArgsConstructor
 @Service
 public class UserServiceImpl implements UserService {
