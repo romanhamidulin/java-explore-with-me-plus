@@ -8,6 +8,12 @@ import java.util.List;
 @Setter
 public class UserRequest {
     private List<Long> ids;
-    private Integer from = 0;
-    private Integer size = 10;
+    private Integer from;
+    private Integer size;
+
+    public UserRequest(List<Long> ids, Integer from, Integer size) {
+        this.ids = ids;
+        this.from = from;
+        this.size = size;
+    }
 }
