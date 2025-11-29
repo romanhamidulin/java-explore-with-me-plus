@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -20,7 +21,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
-@RestController
+@Component
 public class StatClient {
     private final RestClient restClient;
     @Value("${stats-server.url:http://localhost:9090}")
