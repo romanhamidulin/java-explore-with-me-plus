@@ -23,8 +23,8 @@ public final class EventMapper {
                 .paid(event.isPaid())
                 .requestModeration(event.isRequestModeration())
                 .participantLimit(event.getParticipantLimit())
-                .location(LocationDto.builder().
-                        lat(event.getLocation().getLat())
+                .location(LocationDto.builder()
+                        .lat(event.getLocation().getLat())
                         .lon(event.getLocation().getLat())
                         .build())
                 .state(event.getState())
