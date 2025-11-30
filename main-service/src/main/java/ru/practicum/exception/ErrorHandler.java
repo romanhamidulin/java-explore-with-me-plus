@@ -1,0 +1,53 @@
+package ru.practicum.exception;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.time.LocalDateTime;
+
+@Slf4j
+@RestControllerAdvice
+public class ErrorHandler {
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ApiError handleException(final Throwable e) {
+        log.error("500 {}", e.getMessage(), e);
+        return new ApiError(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), "Возникла ошибка на сервере", e.getMessage(), LocalDateTime.now());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleValidate(final ValidationException e) {
+        log.error("400 {}", e.getMessage(), e);
+        return new ApiError(HttpStatus.BAD_REQUEST.getReasonPhrase(), "Неправильно создан запрос", e.getMessage(), LocalDateTime.now());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ApiError handleNotFound(final NotFoundException e) {
+        log.error("404 {}", e.getMessage(), e);
+        return new ApiError(HttpStatus.NOT_FOUND.getReasonPhrase(), "Не найден объект", e.getMessage(), LocalDateTime.now());
+    }
+
+    @ExceptionHandler({
+            ConflictException.class,
+            EventConflictException.class,
+            RequestConflictException.class
+    })
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handleConflict(final RuntimeException e) {
+        log.error("409 {}", e.getMessage(), e);
+        return new ApiError(HttpStatus.CONFLICT.getReasonPhrase(), "Произошел конфликт данных", e.getMessage(), LocalDateTime.now());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handleConstraintViolation(final DataIntegrityViolationException e) {
+        log.error("409 {}", e.getMessage(), e);
+        return new ApiError(HttpStatus.CONFLICT.getReasonPhrase(), "Произошел конфликт данных", e.getMessage(), LocalDateTime.now());
+    }
+}
