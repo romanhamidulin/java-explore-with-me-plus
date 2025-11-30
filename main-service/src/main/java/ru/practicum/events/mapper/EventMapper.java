@@ -42,7 +42,7 @@ public class EventMapper {
                 .annotation(event.getAnnotation())
                 .eventDate(event.getEventDate())
                 .paid(event.getPaid())
-                .category(CategoryMapper.toCategoryDto(event.getCategory()))
+                .category(CategoryMapper.mapToDto(event.getCategory()))
                 .initiator(UserMapper.toUserShortDto(event.getInitiator()))
                 .build();
     }
@@ -57,7 +57,7 @@ public class EventMapper {
                 .paid(event.getPaid())
                 .requestModeration(event.getRequestModeration())
                 .participantLimit(event.getParticipantLimit())
-                .category(CategoryMapper.toCategoryDto(event.getCategory()))
+                .category(CategoryMapper.mapToDto(event.getCategory()))
                 .location(LocationMapper.toLocationDto(event.getLocation()))
                 .initiator(UserMapper.toUserShortDto(event.getInitiator()))
                 .state(event.getState())
