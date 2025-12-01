@@ -25,23 +25,24 @@ public class Event {
     @Column(name = "event_date")
     private LocalDateTime eventDate;
 
-    private Boolean paid;
+    private boolean paid;
 
     @Column(name = "request_moderation")
-    private Boolean requestModeration;
+    private boolean requestModeration;
 
     @Column(name = "participant_limit")
     private int participantLimit;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+
+    @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "location_id")
     private Location location;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "initiator_id")
     private User initiator;
 
