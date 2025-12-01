@@ -101,5 +101,4 @@ public class EventMapper {
                 .createdOn(event.getCreatedOn())
                 .build();
     }
-
 }
