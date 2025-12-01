@@ -13,7 +13,7 @@ import ru.practicum.user.mapper.UserMapper;
 
 @UtilityClass
 public class EventMapper {
-    public EventDto mapToDto(Event event, Integer confirmedRequest, Long views) {
+    public EventDto mapToDto(Event event, Long confirmedRequest, Long views) {
         return EventDto.builder()
                 .id(event.getId())
                 .title(event.getTitle())
@@ -21,8 +21,8 @@ public class EventMapper {
                 .description(event.getDescription())
                 .confirmedRequests(confirmedRequest)
                 .views(views)
-                .paid(event.isPaid())
-                .requestModeration(event.isRequestModeration())
+                .paid(event.getPaid())
+                .requestModeration(event.getRequestModeration())
                 .participantLimit(event.getParticipantLimit())
                 .location(LocationDto.builder()
                         .lat(event.getLocation().getLat())
@@ -33,9 +33,9 @@ public class EventMapper {
                         .id(event.getInitiator().getId())
                         .name(event.getInitiator().getName())
                         .build())
-                .eventDate(event.getEventDate().toString())
-                .createdOn(event.getCreatedOn().toString())
-                .publishedOn(event.getPublishedOn().toString())
+                .eventDate(event.getEventDate())
+                .createdOn(event.getCreatedOn())
+                .publishedOn(event.getPublishedOn())
                 .build();
     }
 
@@ -46,7 +46,7 @@ public class EventMapper {
                 .annotation(event.getAnnotation())
                 .confirmedRequests(confirmedRequest)
                 .views(views)
-                .paid(event.isPaid())
+                .paid(event.getPaid())
                 .category(CategoryDto.builder()
                         .id(event.getCategory().getId())
                         .name(event.getCategory().getName())
@@ -55,7 +55,7 @@ public class EventMapper {
                         .id(event.getInitiator().getId())
                         .name(event.getInitiator().getName())
                         .build())
-                .eventDate(event.getEventDate().toString())
+                .eventDate(event.getEventDate())
                 .build();
     }
 

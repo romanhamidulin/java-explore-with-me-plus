@@ -241,7 +241,8 @@ public class EventServiceImpl implements EventService {
     @Override
     public EventDto eventById(Long eventId, String ip) {
         Event event = checkEvent(eventId);
-        Integer countOfConfirmed = requestRepository.findAllByStatusAndEvent_Id(RequestStatus.CONFIRMED, eventId).size();
+        Integer countOfConfirmedInt = requestRepository.findAllByStatusAndEvent_Id(RequestStatus.CONFIRMED, eventId).size();
+        Long countOfConfirmed = countOfConfirmedInt.longValue();
         Long countOfViews = getViews(eventId);
 
         EndpointHitDto hitDto = EndpointHitDto.builder()

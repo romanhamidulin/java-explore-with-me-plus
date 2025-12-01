@@ -1,4 +1,4 @@
-package ru.practicum.events.controllers;
+package ru.practicum.events.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Min;
