@@ -2,15 +2,17 @@ package ru.practicum.request.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.query.Param;
 import ru.practicum.request.dto.ConfirmedRequests;
 import ru.practicum.request.model.Request;
 import ru.practicum.request.model.RequestStatus;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
-public interface RequestRepository extends JpaRepository<Request, Long> {
+public interface RequestRepository extends JpaRepository<Request, Long>, QuerydslPredicateExecutor<Request> {
     @Query("""
             SELECT new ru.practicum.request.dto.ConfirmedRequests(COUNT(DISTINCT r.id), r.event.id)
             FROM Request AS r
@@ -21,7 +23,12 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
     List<ConfirmedRequests> findAllByEventIdInAndStatus(@Param("ids") List<Long> ids,
                                                         @Param("status") RequestStatus status);
 
+    List<Request> findAllByStatusAndEvent_Id(RequestStatus status, Long eventId);
+
     Long countByEventIdAndStatus(Long eventId, RequestStatus status);
+
+    @Query("SELECT r.event.id, COUNT(r) FROM Request r WHERE r.status = ?1 AND r.event.id IN ?2 GROUP BY r.event.id")
+    Map<Long, Long> countConfirmedRequestsByEvents(RequestStatus status, List<Long> eventIds);
 
     List<Request> findAllByEventId(Long eventId);
 
