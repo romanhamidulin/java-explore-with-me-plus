@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
-import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -18,11 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.events.dto.EventAdminUpdateDto;
 import ru.practicum.events.dto.EventDto;
 import ru.practicum.events.service.EventService;
-import ru.practicum.exception.ValidationException;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
