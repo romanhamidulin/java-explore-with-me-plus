@@ -30,21 +30,12 @@ public class EventPublicController {
                                          @RequestParam(defaultValue = "views") String sort,
                                          @Min(0) @RequestParam(defaultValue = "0") Integer from,
                                          @Positive @RequestParam(defaultValue = "10") Integer size,
-                                         @Positive @RequestParam(required = false) List<Long> categories,
+                                         @RequestParam(required = false) List<Long> categories,
                                          @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
                                          @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
                                          @RequestParam(required = false) Boolean paid,
                                          @RequestParam(defaultValue = "false") Boolean onlyOnAvailable,
                                          HttpServletRequest request) {
-        // Валидация categories
-        if (categories != null) {
-            for (Long categoryId : categories) {
-                if (categoryId == null || categoryId <= 0) {
-                    throw new ValidationException("ID категории должен быть положительным числом");
-                }
-            }
-        }
-
         EntityParam entityParam = EntityParam.builder()
                 .text(text)
                 .sort(EventSort.from(sort))

@@ -357,19 +357,17 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventDto> getEvents(List<Long> users, List<String> states, List<Long> categories,
-                                    String rangeStart, String rangeEnd, Integer from, Integer size) {
+                                    LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size) {
         log.info("Поиск событий с параметрами: users={}, states={}, categories={}, rangeStart={}, rangeEnd={}, from={}, size={}",
                 users, states, categories, rangeStart, rangeEnd, from, size);
 
         validateSearchParameters(users, states, rangeStart, rangeEnd);
 
         List<EventState> eventStates = parseEventStates(states);
-        LocalDateTime start = parseDateTime(rangeStart);
-        LocalDateTime end = parseDateTime(rangeEnd);
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
 
-        List<Event> events = eventRepository.findEventsByAdminFilters(users, eventStates, categories, start, end, pageable);
+        List<Event> events = eventRepository.findEventsByAdminFilters(users, eventStates, categories, rangeStart, rangeEnd, pageable);
 
         log.info("Найдено {} событий", events.size());
 
@@ -402,11 +400,9 @@ public class EventServiceImpl implements EventService {
     }
 
     private void validateSearchParameters(List<Long> users, List<String> states,
-                                          String rangeStart, String rangeEnd) {
+                                          LocalDateTime rangeStart, LocalDateTime rangeEnd) {
         if (rangeStart != null && rangeEnd != null) {
-            LocalDateTime start = parseDateTime(rangeStart);
-            LocalDateTime end = parseDateTime(rangeEnd);
-            if (start.isAfter(end)) {
+            if (rangeStart.isAfter(rangeEnd)) {
                 throw new ValidationException("Дата начала rangeStart не может быть позже даты окончания rangeEnd");
             }
         }

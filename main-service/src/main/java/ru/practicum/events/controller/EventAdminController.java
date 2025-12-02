@@ -3,6 +3,7 @@ package ru.practicum.events.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +19,7 @@ import ru.practicum.events.dto.EventDto;
 import ru.practicum.events.service.EventService;
 import ru.practicum.exception.ValidationException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,8 +35,10 @@ public class EventAdminController {
     public List<EventDto> getEvents(@RequestParam(required = false) List<Long> users,
                                     @RequestParam(required = false) List<String> states,
                                     @RequestParam(required = false) List<Long> categories,
-                                    @RequestParam(required = false) String rangeStart,
-                                    @RequestParam(required = false) String rangeEnd,
+                                    @RequestParam(required = false)
+                                        @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart, // ← ВАЖНО!
+                                    @RequestParam(required = false)
+                                        @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
                                     @RequestParam(defaultValue = "0") Integer from,
                                     @RequestParam(defaultValue = "10") Integer size) {
 

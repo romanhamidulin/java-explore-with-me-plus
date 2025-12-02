@@ -7,6 +7,7 @@ import ru.practicum.events.dto.EventDto;
 import ru.practicum.events.dto.EventShortDto;
 import ru.practicum.events.dto.EventUpdateDto;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface EventService {
@@ -23,7 +24,7 @@ public interface EventService {
     EventDto eventById(Long evenId, String ip);
 
     List<EventDto> getEvents(List<Long> users, List<String> states, List<Long> categories,
-                             String rangeStart, String rangeEnd, Integer from, Integer size);
+                             LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size);
 
     EventDto updateEvent(Long eventId, EventAdminUpdateDto updateRequest);
 }
