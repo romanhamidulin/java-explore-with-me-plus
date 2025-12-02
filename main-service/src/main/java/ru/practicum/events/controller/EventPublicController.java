@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.StatClient;
-import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.events.dto.EntityParam;
 import ru.practicum.events.dto.EventDto;
 import ru.practicum.events.dto.EventShortDto;
@@ -47,22 +46,11 @@ public class EventPublicController {
                 .paid(paid)
                 .onlyAvailable(onlyOnAvailable)
                 .build();
-        hit(request);
         return service.allEvents(entityParam, request.getRemoteAddr());
     }
 
     @GetMapping("/{eventId}")
     public EventDto findEventById(@Positive @PathVariable Long eventId, HttpServletRequest request) {
-        hit(request);
         return service.eventById(eventId, request.getRemoteAddr());
-    }
-
-    private void hit(HttpServletRequest request) {
-        EndpointHitDto endpointHitDto = new EndpointHitDto();
-        endpointHitDto.setApp(MAIN_SERVICE);
-        endpointHitDto.setUri(request.getRequestURI());
-        endpointHitDto.setIp(request.getRemoteAddr());
-        endpointHitDto.setTimestamp(LocalDateTime.now());
-        statClient.hit(endpointHitDto);
     }
 }
