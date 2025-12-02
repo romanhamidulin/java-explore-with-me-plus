@@ -12,7 +12,6 @@ import ru.practicum.events.dto.EventDto;
 import ru.practicum.events.dto.EventShortDto;
 import ru.practicum.events.model.EventSort;
 import ru.practicum.events.service.EventService;
-import ru.practicum.exception.ValidationException;
 
 import java.time.LocalDateTime;
 import java.util.List;
