@@ -478,8 +478,7 @@ public class EventServiceImpl implements EventService {
 
             // Проверка 2: Дата события должна быть не ранее чем за 1 час от публикации
             if (eventDateToCheck.isBefore(now.plusHours(1))) {
-                throw new ValidationException( // ← ИЗМЕНЕНИЕ: ValidationException
-                        "Дата начала события должна быть не ранее чем за час от даты публикации. " +
+                throw new ValidationException("Дата начала события должна быть не ранее чем за час от даты публикации. " +
                                 "Дата события: " + eventDateToCheck + ", Текущее время: " + now
                 );
             }
@@ -490,15 +489,13 @@ public class EventServiceImpl implements EventService {
             // Для уже опубликованного события - проверка 1 час
             if (event.getState() == EventState.PUBLISHED) {
                 if (updateRequest.getEventDate().isBefore(now.plusHours(1))) {
-                    throw new ValidationException( // ← ИЗМЕНЕНИЕ: ValidationException
-                            "Дата начала изменяемого события должна быть не ранее чем за час от даты публикации"
+                    throw new ValidationException("Дата начала изменяемого события должна быть не ранее чем за час от даты публикации"
                     );
                 }
             } else {
                 // Для неопубликованного события - проверка 2 часа
                 if (updateRequest.getEventDate().isBefore(now.plusHours(2))) {
-                    throw new ValidationException( // ← ИЗМЕНЕНИЕ: ValidationException
-                            "Дата и время события должны быть не ранее чем через 2 часа от текущего момента"
+                    throw new ValidationException("Дата и время события должны быть не ранее чем через 2 часа от текущего момента"
                     );
                 }
             }
