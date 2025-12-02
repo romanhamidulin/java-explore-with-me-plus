@@ -14,13 +14,15 @@ import ru.practicum.user.mapper.UserMapper;
 import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @Service
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     @Override
-    public Page<UserDto> getUsers(UserRequest request) {
+    public List<UserDto> getUsers(UserRequest request) {
 
         Pageable pageable = PageRequest.of(request.getFrom(), request.getSize());
 
@@ -28,7 +30,7 @@ public class UserServiceImpl implements UserService {
                 ? userRepository.findAll(pageable)
                 : userRepository.findByIdIn(request.getIds(), pageable);
 
-        return userPage.map(UserMapper::toUserDto);
+        return userPage.map(UserMapper::toUserDto).getContent();
     }
 
     @Override

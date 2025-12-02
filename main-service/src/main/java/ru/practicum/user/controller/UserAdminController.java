@@ -2,7 +2,6 @@ package ru.practicum.user.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.user.dto.NewUserRequest;
@@ -19,7 +18,7 @@ public class UserAdminController {
     private final UserService userService;
 
     @GetMapping
-    public Page<UserDto> getUsers(@RequestParam(required = false) List<Long> ids,
+    public List<UserDto> getUsers(@RequestParam(required = false) List<Long> ids,
                                   @RequestParam(defaultValue = "0") int from,
                                   @RequestParam(defaultValue = "10") int size
     ) {
