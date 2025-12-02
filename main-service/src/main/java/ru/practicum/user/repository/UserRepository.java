@@ -19,4 +19,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Modifying
     @Query("DELETE FROM User u WHERE u.id = :id")
     int deleteByIdAndReturnCount(@Param("id") Long id);
+
+    @Query("SELECT u.id FROM User u WHERE u.id IN :userIds")
+    List<Long> findExistingUserIds(@Param("userIds") List<Long> userIds);
 }

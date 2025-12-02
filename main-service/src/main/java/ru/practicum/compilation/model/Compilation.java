@@ -17,12 +17,14 @@ public class Compilation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToMany
     @JoinTable(name = "compilations_events",
             joinColumns = @JoinColumn(name = "compilation_id"),
             inverseJoinColumns = @JoinColumn(name = "event_id")
     )
     private Set<Event> events = new HashSet<>();
-    private boolean pinned;
+    private Boolean pinned;
+
+    @Column(nullable = false, length = 50)
     private String title;
 }
