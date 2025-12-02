@@ -12,6 +12,7 @@ import ru.practicum.events.dto.EventDto;
 import ru.practicum.events.dto.EventShortDto;
 import ru.practicum.events.model.EventSort;
 import ru.practicum.events.service.EventService;
+import ru.practicum.exception.ValidationException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -35,6 +36,15 @@ public class EventPublicController {
                                          @RequestParam(required = false) Boolean paid,
                                          @RequestParam(defaultValue = "false") Boolean onlyOnAvailable,
                                          HttpServletRequest request) {
+        // Валидация categories
+        if (categories != null) {
+            for (Long categoryId : categories) {
+                if (categoryId == null || categoryId <= 0) {
+                    throw new ValidationException("ID категории должен быть положительным числом");
+                }
+            }
+        }
+
         EntityParam entityParam = EntityParam.builder()
                 .text(text)
                 .sort(EventSort.from(sort))

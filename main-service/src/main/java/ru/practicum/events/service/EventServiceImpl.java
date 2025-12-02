@@ -449,25 +449,58 @@ public class EventServiceImpl implements EventService {
     }
 
     private void validateEventForAdminUpdate(Event event, EventAdminUpdateDto updateRequest) {
+        LocalDateTime now = LocalDateTime.now();
+
+        // Проверка 1: Дата события при изменении
         if (updateRequest.getEventDate() != null) {
-            LocalDateTime newEventDate = /*parseDateTime(*/ updateRequest.getEventDate(); //);
-            if (newEventDate.isBefore(LocalDateTime.now().plusHours(1))) {
-                throw new ConflictException("Дата начала изменяемого события должна быть не ранее чем за час от текущего времени");
+            LocalDateTime newEventDate = updateRequest.getEventDate();
+
+            // Для публикации или уже опубликованного события - минимум 1 час
+            if (updateRequest.getStateAction() == AdminUpdateStateAction.PUBLISH_EVENT ||
+                    event.getState() == EventState.PUBLISHED) {
+
+                if (newEventDate.isBefore(now.plusHours(1))) {
+                    throw new ConflictException(
+                            "Дата начала изменяемого события должна быть не ранее чем за час от даты публикации"
+                    );
+                }
+            } else {
+                // Для других случаев - минимум 2 часа
+                if (newEventDate.isBefore(now.plusHours(2))) {
+                    throw new ConflictException(
+                            "Дата и время события должны быть не ранее чем через 2 часа от текущего момента"
+                    );
+                }
             }
         }
 
+        // Проверка 2: Публикация события
         if (updateRequest.getStateAction() == AdminUpdateStateAction.PUBLISH_EVENT) {
+            // ПРАВИЛО: Событие должно быть в состоянии PENDING
             if (event.getState() != EventState.PENDING) {
-                throw new ConflictException("Событие можно публиковать только, если оно в состоянии ожидания публикации. Текущее состояние: " + event.getState());
+                throw new ConflictException(
+                        "Событие можно публиковать только, если оно в состоянии ожидания публикации. " +
+                                "Текущее состояние: " + event.getState()
+                );
+            }
+
+            // ПРАВИЛО: Дата существующего события должна быть не ранее чем через 1 час
+            if (event.getEventDate().isBefore(now.plusHours(1))) {
+                throw new ConflictException(
+                        "Дата начала события должна быть не ранее чем за час от даты публикации. " +
+                                "Дата события: " + event.getEventDate() + ", Текущее время: " + now
+                );
             }
         }
 
+        // Проверка 3: Отклонение события
         if (updateRequest.getStateAction() == AdminUpdateStateAction.REJECT_EVENT) {
             if (event.getState() == EventState.PUBLISHED) {
                 throw new ConflictException("Событие можно отклонить только, если оно еще не опубликовано");
             }
         }
     }
+
 
     private void updateEventFields(Event event, EventAdminUpdateDto updateRequest) {
         if (updateRequest.getAnnotation() != null && !updateRequest.getAnnotation().isBlank()) {
