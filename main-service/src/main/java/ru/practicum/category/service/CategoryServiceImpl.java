@@ -46,14 +46,30 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional
     public CategoryDto updateById(Long catId, NewCategoryDto dto) {
-        repository.findByNameContainsIgnoreCase(dto.getName()).ifPresent(category -> {
-            throw new ConflictException("Категория с таким именем уже существует");
-        });
-        Category category = checkCategory(catId);
-        category.setName(dto.getName());
+        Category category = repository.findById(catId)
+                .orElseThrow(() -> new NotFoundException("Категория с id = " + catId + " не найдена"));
 
-        return CategoryMapper.mapToDto(repository.save(category));
+        if (dto.getName() != null && !dto.getName().isBlank()) {
+            String newName = dto.getName().trim();
+
+            if (category.getName().equals(newName)) {
+                return CategoryMapper.mapToDto(category);
+            }
+
+            // 2. Проверяем, не используется ли имя другой категорией
+            if (repository.existsByNameAndIdNot(newName, catId)) {
+                throw new ConflictException("Категория с именем " + newName + " уже существует");
+            }
+
+            // 3. Обновляем имя
+            category.setName(newName);
+        }
+
+        // Сохраняем изменения
+        Category updatedCategory = repository.save(category);
+        return CategoryMapper.mapToDto(updatedCategory);
     }
 
     @Override
