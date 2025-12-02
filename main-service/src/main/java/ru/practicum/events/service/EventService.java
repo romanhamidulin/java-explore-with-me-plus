@@ -21,4 +21,9 @@ public interface EventService {
     EventDto updateEvent(Long userId, Long eventId, EventUpdateDto eventUpdateDto);
 
     EventDto eventById(Long evenId, String ip);
+
+    List<EventDto> getEvents(List<Long> users, List<String> states, List<Long> categories,
+                             String rangeStart, String rangeEnd, Integer from, Integer size);
+
+    EventDto updateEvent(Long eventId, EventAdminUpdateDto updateRequest);
 }
