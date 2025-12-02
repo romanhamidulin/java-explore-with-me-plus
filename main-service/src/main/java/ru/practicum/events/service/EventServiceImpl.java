@@ -83,7 +83,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public EventDto addEvent(Long userId, EventCreateDto eventCreateDto) {
         log.info("Валидация даты и времени события");
-        validateEventDate(eventCreateDto.getEventDate());
+        validateEventDate(eventCreateDto.getEventDate(), EventState.PENDING);
 
         Event event = EventMapper.toEvent(eventCreateDto);
 
@@ -140,7 +140,7 @@ public class EventServiceImpl implements EventService {
         }
         if (eventUpdateDto.getEventDate() != null) {
             log.info("Валидация новых даты и времени события");
-            validateEventDate(eventUpdateDto.getEventDate());
+            validateEventDate(eventUpdateDto.getEventDate(), event.getState());
             log.info("Обновление даты и времени события");
             event.setEventDate(eventUpdateDto.getEventDate());
         }
@@ -198,10 +198,26 @@ public class EventServiceImpl implements EventService {
         return res;
     }
 
-    private void validateEventDate(LocalDateTime eventDate) {
-        LocalDateTime minValidDate = LocalDateTime.now().plusHours(2);
+    private void validateEventDate(LocalDateTime eventDate, EventState currentState) {
+        LocalDateTime now = LocalDateTime.now();
+
+        // Определяем минимальный интервал в зависимости от состояния события
+        int minHours;
+        if (currentState == EventState.PUBLISHED) {
+            minHours = 1; // Для опубликованных событий - 1 час от текущего времени
+        } else {
+            minHours = 2; // Для неопубликованных событий - 2 часа от текущего времени
+        }
+
+        LocalDateTime minValidDate = now.plusHours(minHours);
         if (eventDate.isBefore(minValidDate)) {
-            throw new EventConflictException("Дата и время на которые намечено событие не может быть раньше, чем через два часа от текущего момента");
+            String message;
+            if (minHours == 1) {
+                message = "Дата начала изменяемого события должна быть не ранее чем за час от даты публикации";
+            } else {
+                message = "Дата и время события должны быть не ранее чем через 2 часа от текущего момента";
+            }
+            throw new EventConflictException(message);
         }
     }
 
@@ -216,8 +232,9 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventShortDto> allEvents(EntityParam params, String ip) {
 
-        if (params.getRangeStart() != null && params.getRangeEnd() != null && params.getRangeStart().isAfter(params.getRangeEnd())) {
-            throw new ValidationException("Дата начала не может идти после даты конца");
+        if (params.getRangeStart() != null && params.getRangeEnd() != null
+                && params.getRangeStart().isAfter(params.getRangeEnd())) {
+            throw new ValidationException("Дата начала не может быть позже даты окончания");
         }
 
         BooleanExpression expression = prepareAndBuildQuery(params);
@@ -400,10 +417,8 @@ public class EventServiceImpl implements EventService {
 
     private void validateSearchParameters(List<Long> users, List<String> states,
                                           LocalDateTime rangeStart, LocalDateTime rangeEnd) {
-        if (rangeStart != null && rangeEnd != null) {
-            if (rangeStart.isAfter(rangeEnd)) {
-                throw new ValidationException("Дата начала rangeStart не может быть позже даты окончания rangeEnd");
-            }
+        if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
+            throw new ValidationException("Дата начала не может быть позже даты окончания");
         }
 
         if (users != null && !users.isEmpty()) {
@@ -446,32 +461,14 @@ public class EventServiceImpl implements EventService {
     private void validateEventForAdminUpdate(Event event, EventAdminUpdateDto updateRequest) {
         LocalDateTime now = LocalDateTime.now();
 
-        // Проверка 1: Дата события при изменении
-        if (updateRequest.getEventDate() != null) {
-            LocalDateTime newEventDate = updateRequest.getEventDate();
+        // Определяем, какая дата события будет использоваться для проверки
+        LocalDateTime eventDateToCheck = updateRequest.getEventDate() != null
+                ? updateRequest.getEventDate()
+                : event.getEventDate();
 
-            // Для публикации или уже опубликованного события - минимум 1 час
-            if (updateRequest.getStateAction() == AdminUpdateStateAction.PUBLISH_EVENT ||
-                    event.getState() == EventState.PUBLISHED) {
-
-                if (newEventDate.isBefore(now.plusHours(1))) {
-                    throw new ConflictException(
-                            "Дата начала изменяемого события должна быть не ранее чем за час от даты публикации"
-                    );
-                }
-            } else {
-                // Для других случаев - минимум 2 часа
-                if (newEventDate.isBefore(now.plusHours(2))) {
-                    throw new ConflictException(
-                            "Дата и время события должны быть не ранее чем через 2 часа от текущего момента"
-                    );
-                }
-            }
-        }
-
-        // Проверка 2: Публикация события
+        // Если администратор пытается опубликовать событие
         if (updateRequest.getStateAction() == AdminUpdateStateAction.PUBLISH_EVENT) {
-            // ПРАВИЛО: Событие должно быть в состоянии PENDING
+            // Проверка 1: Событие должно быть в состоянии PENDING
             if (event.getState() != EventState.PENDING) {
                 throw new ConflictException(
                         "Событие можно публиковать только, если оно в состоянии ожидания публикации. " +
@@ -479,12 +476,31 @@ public class EventServiceImpl implements EventService {
                 );
             }
 
-            // ПРАВИЛО: Дата существующего события должна быть не ранее чем через 1 час
-            if (event.getEventDate().isBefore(now.plusHours(1))) {
+            // Проверка 2: Дата события должна быть не ранее чем за 1 час от публикации
+            if (eventDateToCheck.isBefore(now.plusHours(1))) {
                 throw new ConflictException(
                         "Дата начала события должна быть не ранее чем за час от даты публикации. " +
-                                "Дата события: " + event.getEventDate() + ", Текущее время: " + now
+                                "Дата события: " + eventDateToCheck + ", Текущее время: " + now
                 );
+            }
+        }
+
+        // Если администратор изменяет дату существующего события
+        if (updateRequest.getEventDate() != null) {
+            // Для уже опубликованного события - проверка 1 час
+            if (event.getState() == EventState.PUBLISHED) {
+                if (updateRequest.getEventDate().isBefore(now.plusHours(1))) {
+                    throw new ConflictException(
+                            "Дата начала изменяемого события должна быть не ранее чем за час от даты публикации"
+                    );
+                }
+            } else {
+                // Для неопубликованного события - проверка 2 часа
+                if (updateRequest.getEventDate().isBefore(now.plusHours(2))) {
+                    throw new ConflictException(
+                            "Дата и время события должны быть не ранее чем через 2 часа от текущего момента"
+                    );
+                }
             }
         }
 

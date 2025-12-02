@@ -52,18 +52,28 @@ public class RequestServiceImpl implements RequestService {
         if (eventId == null || userId == null) {
             throw new ValidationException("Id должен быть указан");
         }
+
         Event event = eventRepository.findByIdAndInitiatorId(eventId, userId).orElseThrow(
                 () -> new NotFoundException("Событие или пользователь с данным id не найдены, или событие недоступно к просмотру данным пользователем")
         );
+
+        // ИЗМЕНЕНИЕ: Если participantLimit == 0, подтверждение не требуется
         if (event.getParticipantLimit() == 0 || !event.getRequestModeration()) {
             log.info("Если для события лимит заявок равен 0 или отключена пре-модерация заявок, то подтверждение заявок не требуется");
             return new EventRequestStatusUpdateResult(List.of(), List.of());
         }
+
+        // Проверяем текущее количество подтвержденных заявок
         Long confirmedRequests = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
-        if (event.getParticipantLimit() <= confirmedRequests) {
+
+        // ИЗМЕНЕНИЕ: Проверка лимита только если он > 0
+        if (event.getParticipantLimit() > 0 && confirmedRequests >= event.getParticipantLimit()) {
             throw new RequestConflictException("Уже достигнут лимит по заявкам на данное событие");
         }
+
         List<Request> requests = requestRepository.findAllByIdIn(dto.getRequestIds());
+
+        // Проверяем, что все заявки находятся в состоянии ожидания
         if (!requests.stream()
                 .map(Request::getStatus)
                 .allMatch(RequestStatus.PENDING::equals)) {
@@ -72,6 +82,8 @@ public class RequestServiceImpl implements RequestService {
 
         List<ParticipationRequestDto> confirmed = new ArrayList<>();
         List<ParticipationRequestDto> rejected = new ArrayList<>();
+
+        // Если статус REJECTED, все отклоняем
         if (dto.getStatus().equals(RequestStatus.REJECTED)) {
             requests.forEach(request -> request.setStatus(RequestStatus.REJECTED));
             requests = requestRepository.saveAll(requests);
@@ -81,9 +93,14 @@ public class RequestServiceImpl implements RequestService {
             return new EventRequestStatusUpdateResult(confirmed, rejected);
         }
 
+        // Подтверждаем заявки, пока не достигнем лимита
+        // ИЗМЕНЕНИЕ: Если participantLimit == 0, можно подтверждать все
+        int limit = event.getParticipantLimit() == 0 ? Integer.MAX_VALUE : event.getParticipantLimit();
+
         for (int i = 0; i < requests.size(); i++) {
             Request request = requests.get(i);
-            if (event.getParticipantLimit() > 0 && (confirmedRequests + i) < event.getParticipantLimit()) {
+
+            if (confirmedRequests + i < limit) {
                 request.setStatus(RequestStatus.CONFIRMED);
                 request = requestRepository.save(request);
                 confirmed.add(RequestMapper.toParticipationRequestDto(request));
@@ -92,8 +109,8 @@ public class RequestServiceImpl implements RequestService {
                 request = requestRepository.save(request);
                 rejected.add(RequestMapper.toParticipationRequestDto(request));
             }
-
         }
+
         return new EventRequestStatusUpdateResult(confirmed, rejected);
     }
 
@@ -116,28 +133,47 @@ public class RequestServiceImpl implements RequestService {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new NotFoundException("Пользователь с данным id не найден")
         );
+
+        // Проверка 1: Не должно быть повторной заявки
         if (requestRepository.existsByRequesterIdAndEventId(userId, eventId)) {
             throw new RequestConflictException("Запрос на участие в данном событии уже создан");
         }
+
+        // Проверка 2: Инициатор не может подать заявку на свое событие
         if (userId.equals(event.getInitiator().getId())) {
             throw new RequestConflictException("Инициатор события не может добавить запрос на участие в своём событии");
         }
+
+        // Проверка 3: Событие должно быть опубликовано
         if (!event.getState().equals(EventState.PUBLISHED)) {
             throw new RequestConflictException("Нельзя участвовать в неопубликованном событии");
         }
-        Long confirmedRequests = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
-        if (event.getParticipantLimit() <= confirmedRequests) {
-            throw new RequestConflictException("Уже достигнут лимит по заявкам на данное событие");
+
+        // Проверка 4: Лимит участников
+        // ИЗМЕНЕНИЕ: Если participantLimit == 0, то ограничений нет
+        if (event.getParticipantLimit() > 0) { // ← Ключевое изменение!
+            Long confirmedRequests = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
+
+            if (confirmedRequests >= event.getParticipantLimit()) {
+                throw new RequestConflictException("Уже достигнут лимит по заявкам на данное событие");
+            }
         }
+
+        // Создание запроса
         Request request = new Request();
         request.setEvent(event);
         request.setRequester(user);
         request.setCreatedOn(LocalDateTime.now());
-        if (event.getRequestModeration()) {
-            request.setStatus(RequestStatus.PENDING);
-        } else {
+
+        // Автоматическое подтверждение, если:
+        // 1. Отключена пре-модерация (event.getRequestModeration() == false)
+        // 2. Или нет лимита участников (event.getParticipantLimit() == 0)
+        if (!event.getRequestModeration() || event.getParticipantLimit() == 0) {
             request.setStatus(RequestStatus.CONFIRMED);
+        } else {
+            request.setStatus(RequestStatus.PENDING);
         }
+
         request = requestRepository.save(request);
         return RequestMapper.toParticipationRequestDto(request);
     }
