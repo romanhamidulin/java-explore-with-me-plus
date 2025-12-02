@@ -1,5 +1,6 @@
 package ru.practicum.user.service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -44,11 +45,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void deleteUser(Long userId) {
-        long deletedCount = userRepository.deleteByIdAndReturnCount(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с Id " + userId + " не найден"));
 
-        if (deletedCount == 0) {
-            throw new NotFoundException("Пользователь с Id " + userId + " не найден");
-        }
+        userRepository.delete(user);
     }
 }
