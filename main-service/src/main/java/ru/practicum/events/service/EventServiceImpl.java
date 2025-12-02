@@ -215,9 +215,9 @@ public class EventServiceImpl implements EventService {
             if (minHours == 1) {
                 message = "Дата начала изменяемого события должна быть не ранее чем за час от даты публикации";
             } else {
-                message = "Дата и время события должны быть не ранее чем через 2 часа от текущего момента";
+                message = "Дата и время на которые намечено событие не может быть раньше, чем через два часа от текущего момента";
             }
-            throw new EventConflictException(message);
+            throw new ValidationException(message);
         }
     }
 
@@ -478,7 +478,7 @@ public class EventServiceImpl implements EventService {
 
             // Проверка 2: Дата события должна быть не ранее чем за 1 час от публикации
             if (eventDateToCheck.isBefore(now.plusHours(1))) {
-                throw new ConflictException(
+                throw new ValidationException( // ← ИЗМЕНЕНИЕ: ValidationException
                         "Дата начала события должна быть не ранее чем за час от даты публикации. " +
                                 "Дата события: " + eventDateToCheck + ", Текущее время: " + now
                 );
@@ -490,21 +490,21 @@ public class EventServiceImpl implements EventService {
             // Для уже опубликованного события - проверка 1 час
             if (event.getState() == EventState.PUBLISHED) {
                 if (updateRequest.getEventDate().isBefore(now.plusHours(1))) {
-                    throw new ConflictException(
+                    throw new ValidationException( // ← ИЗМЕНЕНИЕ: ValidationException
                             "Дата начала изменяемого события должна быть не ранее чем за час от даты публикации"
                     );
                 }
             } else {
                 // Для неопубликованного события - проверка 2 часа
                 if (updateRequest.getEventDate().isBefore(now.plusHours(2))) {
-                    throw new ConflictException(
+                    throw new ValidationException( // ← ИЗМЕНЕНИЕ: ValidationException
                             "Дата и время события должны быть не ранее чем через 2 часа от текущего момента"
                     );
                 }
             }
         }
 
-        // Проверка 3: Отклонение события
+        // Проверка 3: Отклонение события (оставляем ConflictException - это бизнес-логика)
         if (updateRequest.getStateAction() == AdminUpdateStateAction.REJECT_EVENT) {
             if (event.getState() == EventState.PUBLISHED) {
                 throw new ConflictException("Событие можно отклонить только, если оно еще не опубликовано");
