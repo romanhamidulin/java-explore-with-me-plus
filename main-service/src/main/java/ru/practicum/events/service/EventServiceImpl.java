@@ -58,7 +58,6 @@ public class EventServiceImpl implements EventService {
     private final CategoryRepository categoryRepository;
     private final LocationRepository locationRepository;
     private final RequestRepository requestRepository;
-    private final EventRepository repository;
     private final StatClient client;
 
     @Override
@@ -223,7 +222,7 @@ public class EventServiceImpl implements EventService {
 
         BooleanExpression expression = prepareAndBuildQuery(params);
         Pageable pageable = PageRequest.of(params.getFrom() / params.getSize(), params.getSize());
-        List<Event> events = repository.findAll(expression, pageable).getContent();
+        List<Event> events = eventRepository.findAll(expression, pageable).getContent();
 
         List<EventShortDto> shortDtos = buildEvents(events);
 
@@ -261,7 +260,7 @@ public class EventServiceImpl implements EventService {
     }
 
     private Event checkEvent(Long eventID) {
-        return repository.findById(eventID).orElseThrow(() -> new NotFoundException("Событие с id=" + eventID + "не найден"));
+        return eventRepository.findById(eventID).orElseThrow(() -> new NotFoundException("Событие с id=" + eventID + "не найден"));
     }
 
     private Long getViews(Long eventId) {
