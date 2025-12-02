@@ -24,7 +24,7 @@ import java.util.List;
 @Component
 public class StatClient {
     private final RestClient restClient;
-    @Value("${stats-server.url:http://localhost:9090}")
+    @Value("${stats-server.url:http://stats-server:9090}")
     private String statUrl;
 
     public StatClient() {
