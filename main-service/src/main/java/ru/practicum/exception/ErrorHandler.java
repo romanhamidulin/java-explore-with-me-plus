@@ -6,9 +6,11 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
@@ -28,6 +30,39 @@ public class ErrorHandler {
                 HttpStatus.BAD_REQUEST.getReasonPhrase(),
                 "Неправильно создан запрос",
                 errorMessage,
+                LocalDateTime.now()
+        );
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleMissingParams(final MissingServletRequestParameterException e) {
+        String message = String.format("Отсутствует обязательный параметр: '%s'",
+                e.getParameterName());
+        log.error("400 {}", message, e);
+        return new ApiError(
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                "Неправильно создан запрос",
+                message,
+                LocalDateTime.now()
+        );
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleTypeMismatch(final MethodArgumentTypeMismatchException e) {
+        String requiredType = e.getRequiredType() != null
+                ? e.getRequiredType().getSimpleName()
+                : "неизвестный тип";
+
+        String message = String.format("Параметр '%s' должен быть типа %s",
+                e.getName(),
+                requiredType);
+        log.error("400 {}", message, e);
+        return new ApiError(
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                "Неправильно создан запрос",
+                message,
                 LocalDateTime.now()
         );
     }
