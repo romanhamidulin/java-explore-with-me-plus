@@ -40,7 +40,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public CategoryDto createById(NewCategoryDto dto) {
         repository.findByNameContainsIgnoreCase(dto.getName()).ifPresent(category -> {
-            throw new DuplicateDataException("Пользователь с таким email уже существует");
+            throw new ConflictException("Категория с таким именем уже существует");
         });
         Category category = CategoryMapper.mapToPojo(dto);
         return CategoryMapper.mapToDto(repository.save(category));
@@ -49,7 +49,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public CategoryDto updateById(Long catId, NewCategoryDto dto) {
         repository.findByNameContainsIgnoreCase(dto.getName()).ifPresent(category -> {
-            throw new DuplicateDataException("Пользователь с таким email уже существует");
+            throw new ConflictException("Категория с таким именем уже существует");
         });
         Category category = checkCategory(catId);
         category.setName(dto.getName());
