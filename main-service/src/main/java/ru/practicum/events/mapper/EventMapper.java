@@ -26,7 +26,7 @@ public class EventMapper {
                 .participantLimit(event.getParticipantLimit())
                 .location(LocationDto.builder()
                         .lat(event.getLocation().getLat())
-                        .lon(event.getLocation().getLat())
+                        .lon(event.getLocation().getLon())
                         .build())
                 .state(event.getState())
                 .initiator(UserShortDto.builder()
@@ -65,9 +65,9 @@ public class EventMapper {
         event.setAnnotation(dto.getAnnotation());
         event.setDescription(dto.getDescription());
         event.setEventDate(dto.getEventDate());
-        event.setPaid(dto.getPaid());
-        event.setRequestModeration(dto.getRequestModeration());
-        event.setParticipantLimit(dto.getParticipantLimit());
+        event.setPaid(dto.getPaid() != null ? dto.getPaid() : false);
+        event.setParticipantLimit(dto.getParticipantLimit() != null ? dto.getParticipantLimit() : 0);
+        event.setRequestModeration(dto.getRequestModeration() != null ? dto.getRequestModeration() : true);
         return event;
     }
 
