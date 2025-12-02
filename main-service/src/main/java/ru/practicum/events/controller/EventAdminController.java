@@ -50,28 +50,10 @@ public class EventAdminController {
     @PatchMapping("/{eventId}")
     @ResponseStatus(HttpStatus.OK)
     public EventDto updateEventAdmin(@PathVariable Long eventId,
-                                     @Valid @RequestBody EventAdminUpdateDto updateRequest,
-                                     BindingResult bindingResult) {
-
-        if (bindingResult.hasErrors()) {
-            String errorMessage = bindingResult.getFieldErrors().stream()
-                    .map(error -> String.format("Поле: %s. Ошибка: %s. Значение: %s",
-                            error.getField(), error.getDefaultMessage(), error.getRejectedValue()))
-                    .collect(Collectors.joining("; "));
-
-            log.error("Ошибки валидации: {}", errorMessage);
-            throw new ValidationException("Некорректные данные в запросе: " + errorMessage);
-        }
+                                     @Valid @RequestBody EventAdminUpdateDto updateRequest) {
 
         log.info("PATCH /admin/events/{} получен запрос: {}", eventId, updateRequest);
 
-        try {
-            EventDto result = eventAdminService.updateEvent(eventId, updateRequest);
-            log.info("PATCH /admin/events/{} успешно обработан: {}", eventId, result);
-            return result;
-        } catch (Exception e) {
-            log.error("Ошибка при обработке PATCH /admin/events/{}: {}", eventId, e.getMessage(), e);
-            throw e;
-        }
+        return eventAdminService.updateEvent(eventId, updateRequest);
     }
 }
