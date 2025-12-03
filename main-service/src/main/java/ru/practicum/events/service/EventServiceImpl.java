@@ -345,7 +345,13 @@ public class EventServiceImpl implements EventService {
     private List<EventShortDto> buildEvents(List<Event> events) {
         List<Long> eventIds = events.stream().map(Event::getId).toList();
 
-        Map<Long, Long> confirmedRequests = requestRepository.countConfirmedRequestsByEvents(RequestStatus.CONFIRMED, eventIds);
+        Map<Long, Long> confirmedRequests = requestRepository
+                .countConfirmedRequestsByEvents(RequestStatus.CONFIRMED, eventIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        ConfirmedRequests::getEvent,
+                        ConfirmedRequests::getCount
+                ));
 
         Map<Long, Long> views = getViewsForEvents(eventIds);
 
