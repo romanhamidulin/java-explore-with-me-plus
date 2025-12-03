@@ -69,7 +69,11 @@ public class EventServiceImpl implements EventService {
                 .toList();
         Map<Long, Long> confirmedRequestsMap = requestRepository.findAllByEventIdInAndStatus(eventIds, RequestStatus.CONFIRMED)
                 .stream()
-                .collect(Collectors.toMap(ConfirmedRequests::getEvent, ConfirmedRequests::getCount));
+                .collect(Collectors.toMap(
+                        ConfirmedRequests::getEvent,
+                        ConfirmedRequests::getCount,
+                        (count1, count2) -> count1 + count2  // ДОБАВЬТЕ ЭТО
+                ));
 
         return events.stream()
                 .map(event -> {
@@ -350,7 +354,8 @@ public class EventServiceImpl implements EventService {
                 .stream()
                 .collect(Collectors.toMap(
                         ConfirmedRequests::getEvent,
-                        ConfirmedRequests::getCount
+                        ConfirmedRequests::getCount,
+                        (count1, count2) -> count1 + count2  // ДОБАВЬТЕ ЭТО
                 ));
 
         Map<Long, Long> views = getViewsForEvents(eventIds);
@@ -418,7 +423,8 @@ public class EventServiceImpl implements EventService {
                 .stream()
                 .collect(Collectors.toMap(
                         ConfirmedRequests::getEvent,
-                        ConfirmedRequests::getCount
+                        ConfirmedRequests::getCount,
+                        (count1, count2) -> count1 + count2  // ДОБАВЬТЕ ЭТО
                 ));
         Map<Long, Long> views = getViewsForEvents(eventIds);
 

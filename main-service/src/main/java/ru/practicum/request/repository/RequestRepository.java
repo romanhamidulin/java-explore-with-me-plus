@@ -13,12 +13,12 @@ import java.util.Optional;
 
 public interface RequestRepository extends JpaRepository<Request, Long>, QuerydslPredicateExecutor<Request> {
     @Query("""
-            SELECT new ru.practicum.request.dto.ConfirmedRequests(COUNT(DISTINCT r.id), r.event.id)
-            FROM Request AS r
-            WHERE r.event.id IN (:ids)
-            AND r.status = :status
-            GROUP BY r.event
-            """)
+        SELECT new ru.practicum.request.dto.ConfirmedRequests(COUNT(DISTINCT r.id), r.event.id)
+        FROM Request AS r
+        WHERE r.event.id IN (:ids)
+        AND r.status = :status
+        GROUP BY r.event.id
+        """)
     List<ConfirmedRequests> findAllByEventIdInAndStatus(@Param("ids") List<Long> ids,
                                                         @Param("status") RequestStatus status);
 
@@ -26,12 +26,14 @@ public interface RequestRepository extends JpaRepository<Request, Long>, Queryds
 
     Long countByEventIdAndStatus(Long eventId, RequestStatus status);
 
-    @Query("SELECT new ru.practicum.request.dto.ConfirmedRequests(r.event.id, COUNT(r)) " +
+    @Query("SELECT new ru.practicum.request.dto.ConfirmedRequests(COUNT(r), r.event.id) " +
             "FROM Request r " +
             "WHERE r.status = :status AND r.event.id IN :eventIds " +
             "GROUP BY r.event.id")
     List<ConfirmedRequests> countConfirmedRequestsByEvents(@Param("status") RequestStatus status,
                                                            @Param("eventIds") List<Long> eventIds);
+
+
 
     List<Request> findAllByEventId(Long eventId);
 
