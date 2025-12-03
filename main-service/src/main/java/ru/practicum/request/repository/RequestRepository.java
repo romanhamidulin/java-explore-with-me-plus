@@ -9,7 +9,6 @@ import ru.practicum.request.model.Request;
 import ru.practicum.request.model.RequestStatus;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public interface RequestRepository extends JpaRepository<Request, Long>, QuerydslPredicateExecutor<Request> {
@@ -27,8 +26,12 @@ public interface RequestRepository extends JpaRepository<Request, Long>, Queryds
 
     Long countByEventIdAndStatus(Long eventId, RequestStatus status);
 
-    @Query("SELECT r.event.id, COUNT(r) FROM Request r WHERE r.status = ?1 AND r.event.id IN ?2 GROUP BY r.event.id")
-    Map<Long, Long> countConfirmedRequestsByEvents(RequestStatus status, List<Long> eventIds);
+    @Query("SELECT new ru.practicum.request.dto.ConfirmedRequests(r.event.id, COUNT(r)) " +
+            "FROM Request r " +
+            "WHERE r.status = :status AND r.event.id IN :eventIds " +
+            "GROUP BY r.event.id")
+    List<ConfirmedRequests> countConfirmedRequestsByEvents(@Param("status") RequestStatus status,
+                                                           @Param("eventIds") List<Long> eventIds);
 
     List<Request> findAllByEventId(Long eventId);
 
