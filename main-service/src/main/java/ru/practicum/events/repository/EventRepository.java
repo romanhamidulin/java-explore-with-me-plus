@@ -25,8 +25,8 @@ public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPre
         WHERE (COALESCE(:users) IS NULL OR e.initiator.id IN (:users))
         AND (COALESCE(:states) IS NULL OR e.state IN (:states))
         AND (COALESCE(:categories) IS NULL OR e.category.id IN (:categories))
-        AND (:rangeStart IS NULL OR e.eventDate >= :rangeStart)
-        AND (:rangeEnd IS NULL OR e.eventDate <= :rangeEnd)
+        AND (CAST(:rangeStart AS localdatetime) IS NULL OR e.eventDate >= :rangeStart)
+        AND (CAST(:rangeEnd AS localdatetime) IS NULL OR e.eventDate <= :rangeEnd)
         """)
     List<Event> findEventsByAdminFilters(
             @Param("users") List<Long> users,
@@ -36,4 +36,5 @@ public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPre
             @Param("rangeEnd") LocalDateTime rangeEnd,
             Pageable pageable);
 }
+
 

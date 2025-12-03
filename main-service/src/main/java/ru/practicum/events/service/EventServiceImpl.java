@@ -276,8 +276,16 @@ public class EventServiceImpl implements EventService {
         return EventMapper.mapToDto(event, countOfConfirmed, countOfViews);
     }
 
-    private Event checkEvent(Long eventID) {
-        return eventRepository.findById(eventID).orElseThrow(() -> new NotFoundException("Событие с id=" + eventID + "не найден"));
+    private Event checkEvent(Long eventI) {
+        Event event = eventRepository.findById(eventI)
+                .orElseThrow(() -> new NotFoundException("Событие с id=" + eventI + " не найдено"));
+
+        // Проверяем, опубликовано ли событие для публичного доступа
+        if (event.getState() != EventState.PUBLISHED) {
+            throw new NotFoundException("Событие с id=" + eventI + " не опубликовано");
+        }
+
+        return event;
     }
 
     private Long getViews(Long eventId) {
@@ -380,10 +388,17 @@ public class EventServiceImpl implements EventService {
         validateSearchParameters(users, states, rangeStart, rangeEnd);
 
         List<EventState> eventStates = parseEventStates(states);
+
+        // Преобразуем пустые списки в null
+        List<Long> usersParam = (users != null && users.isEmpty()) ? null : users;
+        List<EventState> statesParam = (eventStates != null && eventStates.isEmpty()) ? null : eventStates;
+        List<Long> categoriesParam = (categories != null && categories.isEmpty()) ? null : categories;
+
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
 
-        List<Event> events = eventRepository.findEventsByAdminFilters(users, eventStates, categories, rangeStart, rangeEnd, pageable);
+        List<Event> events = eventRepository.findEventsByAdminFilters(
+                usersParam, statesParam, categoriesParam, rangeStart, rangeEnd, pageable);
 
         log.info("Найдено {} событий", events.size());
 
