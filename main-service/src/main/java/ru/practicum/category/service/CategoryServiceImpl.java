@@ -58,16 +58,13 @@ public class CategoryServiceImpl implements CategoryService {
                 return CategoryMapper.mapToDto(category);
             }
 
-            // 2. Проверяем, не используется ли имя другой категорией
             if (repository.existsByNameAndIdNot(newName, catId)) {
                 throw new ConflictException("Категория с именем " + newName + " уже существует");
             }
 
-            // 3. Обновляем имя
             category.setName(newName);
         }
 
-        // Сохраняем изменения
         Category updatedCategory = repository.save(category);
         return CategoryMapper.mapToDto(updatedCategory);
     }

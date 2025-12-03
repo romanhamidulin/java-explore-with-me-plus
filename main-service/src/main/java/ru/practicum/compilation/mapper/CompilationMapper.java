@@ -22,7 +22,6 @@ public class CompilationMapper {
         dto.setTitle(compilation.getTitle());
         dto.setPinned(compilation.getPinned() != null ? compilation.getPinned() : false);
 
-        // Маппинг событий
         if (compilation.getEvents() != null) {
             List<EventShortDto> eventDtos = compilation.getEvents().stream()
                     .map(EventMapper::toEventShortDto)

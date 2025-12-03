@@ -201,12 +201,11 @@ public class EventServiceImpl implements EventService {
     private void validateEventDate(LocalDateTime eventDate, EventState currentState) {
         LocalDateTime now = LocalDateTime.now();
 
-        // Определяем минимальный интервал в зависимости от состояния события
         int minHours;
         if (currentState == EventState.PUBLISHED) {
-            minHours = 1; // Для опубликованных событий - 1 час от текущего времени
+            minHours = 1;
         } else {
-            minHours = 2; // Для неопубликованных событий - 2 часа от текущего времени
+            minHours = 2;
         }
 
         LocalDateTime minValidDate = now.plusHours(minHours);
@@ -280,7 +279,6 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findById(eventI)
                 .orElseThrow(() -> new NotFoundException("Событие с id=" + eventI + " не найдено"));
 
-        // Проверяем, опубликовано ли событие для публичного доступа
         if (event.getState() != EventState.PUBLISHED) {
             throw new NotFoundException("Событие с id=" + eventI + " не опубликовано");
         }
@@ -306,23 +304,27 @@ public class EventServiceImpl implements EventService {
         BooleanExpression predicate = event.state.eq(EventState.PUBLISHED);
 
         if (param.getText() != null && !param.getText().isEmpty()) {
-            predicate.and(event.annotation.likeIgnoreCase(param.getText()).or(event.description.likeIgnoreCase(param.getText())));
+            predicate = predicate.and(event.annotation.likeIgnoreCase("%" + param.getText() + "%")
+                    .or(event.description.likeIgnoreCase("%" + param.getText() + "%")));
         }
 
         if (param.getCategories() != null && !param.getCategories().isEmpty()) {
-            predicate.and(event.category.id.in(param.getCategories()));
+            predicate = predicate.and(event.category.id.in(param.getCategories()));
         }
 
         if (param.getPaid() != null) {
-            predicate.and(event.paid.eq(param.getPaid()));
+            predicate = predicate.and(event.paid.eq(param.getPaid()));
         }
 
         if (param.getRangeStart() != null && param.getRangeEnd() != null) {
-            predicate.and(event.eventDate.between(param.getRangeStart(), param.getRangeEnd()));
+            predicate = predicate.and(event.eventDate.between(param.getRangeStart(), param.getRangeEnd()));
+        } else if (param.getRangeStart() != null) {
+            predicate = predicate.and(event.eventDate.goe(param.getRangeStart()));
+        } else if (param.getRangeEnd() != null) {
+            predicate = predicate.and(event.eventDate.loe(param.getRangeEnd()));
         } else {
-            predicate.and(event.eventDate.after(LocalDateTime.now()));
+            predicate = predicate.and(event.eventDate.after(LocalDateTime.now()));
         }
-
 
         if (param.getOnlyAvailable() != null && param.getOnlyAvailable()) {
             QRequest request = QRequest.request;
@@ -333,8 +335,10 @@ public class EventServiceImpl implements EventService {
                     .where(request.event.id.eq(event.id)
                             .and(request.status.eq(RequestStatus.CONFIRMED)));
 
-            predicate.and(event.participantLimit.gt(confirmedRequestsCount));
+            predicate = predicate.and(event.participantLimit.gt(confirmedRequestsCount)
+                    .or(event.participantLimit.eq(0)));
         }
+
         return predicate;
     }
 
@@ -380,7 +384,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventDto> getEvents(List<Long> users, List<String> states, List<Long> categories,
+    public List<EventDto>   getEvents(List<Long> users, List<String> states, List<Long> categories,
                                     LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size) {
         log.info("Поиск событий с параметрами: users={}, states={}, categories={}, rangeStart={}, rangeEnd={}, from={}, size={}",
                 users, states, categories, rangeStart, rangeEnd, from, size);
@@ -389,7 +393,6 @@ public class EventServiceImpl implements EventService {
 
         List<EventState> eventStates = parseEventStates(states);
 
-        // Преобразуем пустые списки в null
         List<Long> usersParam = (users != null && users.isEmpty()) ? null : users;
         List<EventState> statesParam = (eventStates != null && eventStates.isEmpty()) ? null : eventStates;
         List<Long> categoriesParam = (categories != null && categories.isEmpty()) ? null : categories;
@@ -402,9 +405,16 @@ public class EventServiceImpl implements EventService {
 
         log.info("Найдено {} событий", events.size());
 
-        return events.stream()
-                .map(EventMapper::toEventDto)
-                .collect(Collectors.toList());
+        List<Long> eventIds = events.stream().map(Event::getId).toList();
+
+        Map<Long, Long> confirmedRequests = requestRepository.countConfirmedRequestsByEvents(RequestStatus.CONFIRMED, eventIds);
+        Map<Long, Long> views = getViewsForEvents(eventIds);
+
+        return events.stream().map(event -> {
+            Long confirmedR = confirmedRequests.get(event.getId());
+            Long view = views.get(event.getId());
+            return EventMapper.mapToDto(event, confirmedR, view);
+        }).collect(Collectors.toList());
     }
 
     @Override
@@ -476,14 +486,11 @@ public class EventServiceImpl implements EventService {
     private void validateEventForAdminUpdate(Event event, EventAdminUpdateDto updateRequest) {
         LocalDateTime now = LocalDateTime.now();
 
-        // Определяем, какая дата события будет использоваться для проверки
         LocalDateTime eventDateToCheck = updateRequest.getEventDate() != null
                 ? updateRequest.getEventDate()
                 : event.getEventDate();
 
-        // Если администратор пытается опубликовать событие
         if (updateRequest.getStateAction() == AdminUpdateStateAction.PUBLISH_EVENT) {
-            // Проверка 1: Событие должно быть в состоянии PENDING
             if (event.getState() != EventState.PENDING) {
                 throw new ConflictException(
                         "Событие можно публиковать только, если оно в состоянии ожидания публикации. " +
@@ -491,7 +498,6 @@ public class EventServiceImpl implements EventService {
                 );
             }
 
-            // Проверка 2: Дата события должна быть не ранее чем за 1 час от публикации
             if (eventDateToCheck.isBefore(now.plusHours(1))) {
                 throw new ValidationException("Дата начала события должна быть не ранее чем за час от даты публикации. " +
                                 "Дата события: " + eventDateToCheck + ", Текущее время: " + now
@@ -499,16 +505,13 @@ public class EventServiceImpl implements EventService {
             }
         }
 
-        // Если администратор изменяет дату существующего события
         if (updateRequest.getEventDate() != null) {
-            // Для уже опубликованного события - проверка 1 час
             if (event.getState() == EventState.PUBLISHED) {
                 if (updateRequest.getEventDate().isBefore(now.plusHours(1))) {
                     throw new ValidationException("Дата начала изменяемого события должна быть не ранее чем за час от даты публикации"
                     );
                 }
             } else {
-                // Для неопубликованного события - проверка 2 часа
                 if (updateRequest.getEventDate().isBefore(now.plusHours(2))) {
                     throw new ValidationException("Дата и время события должны быть не ранее чем через 2 часа от текущего момента"
                     );
@@ -516,7 +519,6 @@ public class EventServiceImpl implements EventService {
             }
         }
 
-        // Проверка 3: Отклонение события (оставляем ConflictException - это бизнес-логика)
         if (updateRequest.getStateAction() == AdminUpdateStateAction.REJECT_EVENT) {
             if (event.getState() == EventState.PUBLISHED) {
                 throw new ConflictException("Событие можно отклонить только, если оно еще не опубликовано");

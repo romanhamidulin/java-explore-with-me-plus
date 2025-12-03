@@ -57,23 +57,19 @@ public class RequestServiceImpl implements RequestService {
                 () -> new NotFoundException("Событие или пользователь с данным id не найдены, или событие недоступно к просмотру данным пользователем")
         );
 
-        // ИЗМЕНЕНИЕ: Если participantLimit == 0, подтверждение не требуется
         if (event.getParticipantLimit() == 0 || !event.getRequestModeration()) {
             log.info("Если для события лимит заявок равен 0 или отключена пре-модерация заявок, то подтверждение заявок не требуется");
             return new EventRequestStatusUpdateResult(List.of(), List.of());
         }
 
-        // Проверяем текущее количество подтвержденных заявок
         Long confirmedRequests = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
 
-        // ИЗМЕНЕНИЕ: Проверка лимита только если он > 0
         if (event.getParticipantLimit() > 0 && confirmedRequests >= event.getParticipantLimit()) {
             throw new RequestConflictException("Уже достигнут лимит по заявкам на данное событие");
         }
 
         List<Request> requests = requestRepository.findAllByIdIn(dto.getRequestIds());
 
-        // Проверяем, что все заявки находятся в состоянии ожидания
         if (!requests.stream()
                 .map(Request::getStatus)
                 .allMatch(RequestStatus.PENDING::equals)) {
@@ -83,7 +79,6 @@ public class RequestServiceImpl implements RequestService {
         List<ParticipationRequestDto> confirmed = new ArrayList<>();
         List<ParticipationRequestDto> rejected = new ArrayList<>();
 
-        // Если статус REJECTED, все отклоняем
         if (dto.getStatus().equals(RequestStatus.REJECTED)) {
             requests.forEach(request -> request.setStatus(RequestStatus.REJECTED));
             requests = requestRepository.saveAll(requests);
@@ -93,8 +88,6 @@ public class RequestServiceImpl implements RequestService {
             return new EventRequestStatusUpdateResult(confirmed, rejected);
         }
 
-        // Подтверждаем заявки, пока не достигнем лимита
-        // ИЗМЕНЕНИЕ: Если participantLimit == 0, можно подтверждать все
         int limit = event.getParticipantLimit() == 0 ? Integer.MAX_VALUE : event.getParticipantLimit();
 
         for (int i = 0; i < requests.size(); i++) {
