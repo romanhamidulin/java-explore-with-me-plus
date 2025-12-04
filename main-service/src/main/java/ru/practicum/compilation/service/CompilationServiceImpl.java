@@ -29,7 +29,6 @@ public class CompilationServiceImpl implements CompilationService {
 
     private final CompilationRepository compilationRepository;
     private final EventRepository eventRepository;
-    private final CompilationMapper compilationMapper;
 
     @Override
     public List<CompilationDto> getCompilations(Boolean pinned, Integer from, Integer size) {
@@ -44,17 +43,16 @@ public class CompilationServiceImpl implements CompilationService {
         }
 
         return compilations.stream()
-                .map(compilationMapper::toDto)
+                .map(CompilationMapper::toDto)
                 .collect(Collectors.toList());
     }
 
     @Override
-    @Transactional(readOnly = true)
     public CompilationDto getCompilationById(Long compId) {
         Compilation compilation = compilationRepository.findById(compId)
                 .orElseThrow(() -> new NotFoundException("Подборка с id = " + compId + " не найдена"));
 
-        return compilationMapper.toDto(compilation);
+        return CompilationMapper.toDto(compilation);
     }
 
     @Override
@@ -63,7 +61,7 @@ public class CompilationServiceImpl implements CompilationService {
         if (compilationRepository.existsByTitle(newCompilationDto.getTitle())) {
             throw new ConflictException("Подборка с наименованием " + newCompilationDto.getTitle() + " уже существует");
         }
-        Compilation compilation = compilationMapper.toEntity(newCompilationDto);
+        Compilation compilation = CompilationMapper.toEntity(newCompilationDto);
 
         if (newCompilationDto.getEvents() != null && !newCompilationDto.getEvents().isEmpty()) {
             Set<Event> events = new HashSet<>(eventRepository.findAllById(newCompilationDto.getEvents()));
@@ -71,7 +69,7 @@ public class CompilationServiceImpl implements CompilationService {
         }
 
         Compilation savedCompilation = compilationRepository.save(compilation);
-        return compilationMapper.toDto(savedCompilation);
+        return CompilationMapper.toDto(savedCompilation);
     }
 
     @Override
@@ -115,6 +113,6 @@ public class CompilationServiceImpl implements CompilationService {
             }
         }
 
-        return compilationMapper.toDto(compilation);
+        return CompilationMapper.toDto(compilation);
     }
 }

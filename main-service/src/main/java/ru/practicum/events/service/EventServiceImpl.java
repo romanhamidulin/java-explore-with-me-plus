@@ -51,7 +51,7 @@ import java.util.Map;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
@@ -85,6 +85,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public EventDto addEvent(Long userId, EventCreateDto eventCreateDto) {
         log.info("Валидация даты и времени события");
         validateEventDate(eventCreateDto.getEventDate(), EventState.PENDING);
@@ -132,6 +133,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public EventDto updateEvent(Long userId, Long eventId, EventUpdateDto eventUpdateDto) {
         if (eventId == null || userId == null) {
             throw new ValidationException("Id должен быть указан");

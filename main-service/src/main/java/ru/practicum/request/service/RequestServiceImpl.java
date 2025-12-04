@@ -1,9 +1,9 @@
 package ru.practicum.request.service;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.events.model.Event;
 import ru.practicum.events.model.EventState;
 import ru.practicum.events.repository.EventRepository;
@@ -27,7 +27,7 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class RequestServiceImpl implements RequestService {
     private final RequestRepository requestRepository;
     private final EventRepository eventRepository;
@@ -48,6 +48,7 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    @Transactional
     public EventRequestStatusUpdateResult updateUserEventRequests(Long userId, Long eventId, EventRequestStatusUpdateRequest dto) {
         if (eventId == null || userId == null) {
             throw new ValidationException("Id должен быть указан");
@@ -80,27 +81,44 @@ public class RequestServiceImpl implements RequestService {
         List<ParticipationRequestDto> rejected = new ArrayList<>();
 
         if (dto.getStatus().equals(RequestStatus.REJECTED)) {
-            requests.forEach(request -> request.setStatus(RequestStatus.REJECTED));
-            requests = requestRepository.saveAll(requests);
-            rejected = requests.stream()
+            requestRepository.updateStatusByIds(dto.getRequestIds(), RequestStatus.REJECTED);
+
+            List<Request> updatedRequests = requestRepository.findAllByIdIn(dto.getRequestIds());
+            rejected = updatedRequests.stream()
                     .map(RequestMapper::toParticipationRequestDto)
                     .toList();
             return new EventRequestStatusUpdateResult(confirmed, rejected);
         }
 
         int limit = event.getParticipantLimit() == 0 ? Integer.MAX_VALUE : event.getParticipantLimit();
+        int availableSlots = limit - confirmedRequests.intValue();
+
+        List<Long> toConfirmIds = new ArrayList<>();
+        List<Long> toRejectIds = new ArrayList<>();
 
         for (int i = 0; i < requests.size(); i++) {
-            Request request = requests.get(i);
-
-            if (confirmedRequests + i < limit) {
-                request.setStatus(RequestStatus.CONFIRMED);
-                request = requestRepository.save(request);
-                confirmed.add(RequestMapper.toParticipationRequestDto(request));
+            if (i < availableSlots) {
+                toConfirmIds.add(requests.get(i).getId());
             } else {
-                request.setStatus(RequestStatus.REJECTED);
-                request = requestRepository.save(request);
-                rejected.add(RequestMapper.toParticipationRequestDto(request));
+                toRejectIds.add(requests.get(i).getId());
+            }
+        }
+
+        if (!toConfirmIds.isEmpty()) {
+            requestRepository.updateStatusByIds(toConfirmIds, RequestStatus.CONFIRMED);
+        }
+        if (!toRejectIds.isEmpty()) {
+            requestRepository.updateStatusByIds(toRejectIds, RequestStatus.REJECTED);
+        }
+
+        List<Request> updatedRequests = requestRepository.findAllByIdIn(dto.getRequestIds());
+
+        for (Request request : updatedRequests) {
+            ParticipationRequestDto dtoResult = RequestMapper.toParticipationRequestDto(request);
+            if (request.getStatus() == RequestStatus.CONFIRMED) {
+                confirmed.add(dtoResult);
+            } else if (request.getStatus() == RequestStatus.REJECTED) {
+                rejected.add(dtoResult);
             }
         }
 
@@ -119,6 +137,7 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    @Transactional
     public ParticipationRequestDto addRequest(Long userId, Long eventId) {
         Event event = eventRepository.findById(eventId).orElseThrow(
                 () -> new NotFoundException("Событие с данным id не найдено")
@@ -127,24 +146,19 @@ public class RequestServiceImpl implements RequestService {
                 () -> new NotFoundException("Пользователь с данным id не найден")
         );
 
-        // Проверка 1: Не должно быть повторной заявки
         if (requestRepository.existsByRequesterIdAndEventId(userId, eventId)) {
             throw new RequestConflictException("Запрос на участие в данном событии уже создан");
         }
 
-        // Проверка 2: Инициатор не может подать заявку на свое событие
         if (userId.equals(event.getInitiator().getId())) {
             throw new RequestConflictException("Инициатор события не может добавить запрос на участие в своём событии");
         }
 
-        // Проверка 3: Событие должно быть опубликовано
         if (!event.getState().equals(EventState.PUBLISHED)) {
             throw new RequestConflictException("Нельзя участвовать в неопубликованном событии");
         }
 
-        // Проверка 4: Лимит участников
-        // ИЗМЕНЕНИЕ: Если participantLimit == 0, то ограничений нет
-        if (event.getParticipantLimit() > 0) { // ← Ключевое изменение!
+        if (event.getParticipantLimit() > 0) {
             Long confirmedRequests = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
 
             if (confirmedRequests >= event.getParticipantLimit()) {
@@ -152,15 +166,11 @@ public class RequestServiceImpl implements RequestService {
             }
         }
 
-        // Создание запроса
         Request request = new Request();
         request.setEvent(event);
         request.setRequester(user);
         request.setCreatedOn(LocalDateTime.now());
 
-        // Автоматическое подтверждение, если:
-        // 1. Отключена пре-модерация (event.getRequestModeration() == false)
-        // 2. Или нет лимита участников (event.getParticipantLimit() == 0)
         if (!event.getRequestModeration() || event.getParticipantLimit() == 0) {
             request.setStatus(RequestStatus.CONFIRMED);
         } else {
@@ -172,6 +182,7 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    @Transactional
     public ParticipationRequestDto cancelRequest(Long userId, Long requestId) {
         Request request = requestRepository.findByIdAndRequesterId(requestId, userId)
                 .orElseThrow(() -> new NotFoundException("Запрос не найден или недоступен данному пользователю"));

@@ -18,11 +18,10 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository repository;
     private final EventRepository eventRepository;
-
 
     @Override
     public List<CategoryDto> findAll(Integer from, Integer size) {
@@ -37,6 +36,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional
     public CategoryDto createById(NewCategoryDto dto) {
         repository.findByNameContainsIgnoreCase(dto.getName()).ifPresent(category -> {
             throw new ConflictException("Категория с таким именем уже существует");
@@ -70,6 +70,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional
     public void deleteById(Long catId) {
         if (eventRepository.existsByCategory_Id(catId)) {
             throw new ConflictException("Категория относиться к событию");
