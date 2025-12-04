@@ -132,11 +132,16 @@ public class ErrorHandler {
         return new ApiError(HttpStatus.CONFLICT.getReasonPhrase(), "Произошел конфликт данных", e.getMessage(), LocalDateTime.now());
     }
 
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(DuplicateDataException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handleDuplicate(final DuplicateDataException e) {
-        log.error("409 {}", e.getMessage(), e);
-        return new ApiError(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), "Присутствует дубликат в запросе", e.getMessage(), LocalDateTime.now());
+        log.warn("409 {}", e.getMessage(), e);  // Изменил на warn, т.к. это клиентская ошибка
+        return new ApiError(
+                HttpStatus.CONFLICT.getReasonPhrase(),
+                "Присутствует дубликат в запросе",
+                e.getMessage(),
+                LocalDateTime.now()
+        );
     }
 
 
