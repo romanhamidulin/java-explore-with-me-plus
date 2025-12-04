@@ -81,9 +81,8 @@ public class RequestServiceImpl implements RequestService {
         List<ParticipationRequestDto> rejected = new ArrayList<>();
 
         if (dto.getStatus().equals(RequestStatus.REJECTED)) {
-            requestRepository.updateStatusByIds(dto.getRequestIds(), RequestStatus.REJECTED);
-
-            List<Request> updatedRequests = requestRepository.findAllByIdIn(dto.getRequestIds());
+            requests.forEach(request -> request.setStatus(RequestStatus.REJECTED));
+            List<Request> updatedRequests = requestRepository.saveAll(requests);
             rejected = updatedRequests.stream()
                     .map(RequestMapper::toParticipationRequestDto)
                     .toList();
@@ -93,26 +92,21 @@ public class RequestServiceImpl implements RequestService {
         int limit = event.getParticipantLimit() == 0 ? Integer.MAX_VALUE : event.getParticipantLimit();
         int availableSlots = limit - confirmedRequests.intValue();
 
-        List<Long> toConfirmIds = new ArrayList<>();
-        List<Long> toRejectIds = new ArrayList<>();
-
         for (int i = 0; i < requests.size(); i++) {
+            Request request = requests.get(i);
             if (i < availableSlots) {
-                toConfirmIds.add(requests.get(i).getId());
+                request.setStatus(RequestStatus.CONFIRMED);
+                confirmed.add(RequestMapper.toParticipationRequestDto(request));
             } else {
-                toRejectIds.add(requests.get(i).getId());
+                request.setStatus(RequestStatus.REJECTED);
+                rejected.add(RequestMapper.toParticipationRequestDto(request));
             }
         }
 
-        if (!toConfirmIds.isEmpty()) {
-            requestRepository.updateStatusByIds(toConfirmIds, RequestStatus.CONFIRMED);
-        }
-        if (!toRejectIds.isEmpty()) {
-            requestRepository.updateStatusByIds(toRejectIds, RequestStatus.REJECTED);
-        }
+        List<Request> updatedRequests = requestRepository.saveAll(requests);
 
-        List<Request> updatedRequests = requestRepository.findAllByIdIn(dto.getRequestIds());
-
+        confirmed.clear();
+        rejected.clear();
         for (Request request : updatedRequests) {
             ParticipationRequestDto dtoResult = RequestMapper.toParticipationRequestDto(request);
             if (request.getStatus() == RequestStatus.CONFIRMED) {
