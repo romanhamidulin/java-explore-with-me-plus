@@ -13,6 +13,8 @@ public interface CommentService {
 
     void deleteComment(long userId, long commentId);
 
+    void adminDeleteComment(long commentId);
+
     CommentDto adminUpdateCommentStatus(Long commentId, AdminUpdateCommentStatusDto dto);
 
     List<CommentDto> adminPendigCommentList(List<Long> usersId);

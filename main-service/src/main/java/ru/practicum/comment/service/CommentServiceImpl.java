@@ -81,6 +81,14 @@ public class CommentServiceImpl implements CommentService {
 
     @Transactional
     @Override
+    public void adminDeleteComment(long commentId) {
+        Comment commentToDelete = commentRepository.findById(commentId)
+                .orElseThrow(() -> new NotFoundException(String.format("Комментарий ID %s не найден", commentId)));
+        commentRepository.delete(commentToDelete);
+    }
+
+    @Transactional
+    @Override
     public CommentDto adminUpdateCommentStatus(Long commentId, AdminUpdateCommentStatusDto updateCommentStatusDto) {
         Comment commentToUpdateStatus = commentRepository.findById(commentId)
                 .orElseThrow(() -> new NotFoundException(String.format("Комментарий ID %s не найден", commentId)));
