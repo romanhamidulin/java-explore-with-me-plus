@@ -67,27 +67,7 @@ public class EventServiceImpl implements EventService {
     public List<EventShortDto> getEventsByOwner(Long userId, Integer from, Integer size) {
         Pageable pageable = PageRequest.of(from / size, size);
         List<Event> events = eventRepository.findAllByInitiatorId(userId, pageable).toList();
-        List<Long> eventIds = events.stream()
-                .map(Event::getId)
-                .toList();
-        Map<Long, Long> confirmedRequestsMap = requestRepository.findAllByEventIdInAndStatus(eventIds, RequestStatus.CONFIRMED)
-                .stream()
-                .collect(Collectors.toMap(
-                        ConfirmedRequests::getEvent,
-                        ConfirmedRequests::getCount,
-                        (count1, count2) -> count1 + count2  // ДОБАВЬТЕ ЭТО
-                ));
-
-        Map<Long, List<CommentDto>> commentsMap = getCommentsForEvents(eventIds);
-
-        return events.stream()
-                .map(event -> {
-                    EventShortDto dto = EventMapper.toEventShortDto(event);
-                    dto.setConfirmedRequests(confirmedRequestsMap.getOrDefault(event.getId(), 0L));
-                    List<CommentDto> comments = commentsMap.get(event.getId());
-                    return dto;
-                })
-                .toList();
+        return buildEvents(events);
     }
 
     @Override
@@ -267,6 +247,7 @@ public class EventServiceImpl implements EventService {
 
         List<EventShortDto> shortDtos = buildEvents(events);
 
+
         EndpointHitDto hitDto = EndpointHitDto.builder()
                 .app("main-service")
                 .ip(ip)
@@ -383,16 +364,18 @@ public class EventServiceImpl implements EventService {
                 .collect(Collectors.toMap(
                         ConfirmedRequests::getEvent,
                         ConfirmedRequests::getCount,
-                        (count1, count2) -> count1 + count2  // ДОБАВЬТЕ ЭТО
+                        (count1, count2) -> count1 + count2
                 ));
 
+
         Map<Long, Long> views = getViewsForEvents(eventIds);
+        Map<Long, List<CommentDto>> comments = getCommentsForEvents(eventIds);
 
 
         return events.stream().map(event -> {
             Long confirmedR = confirmedRequests.get(event.getId());
             Long view = views.get(event.getId());
-            return EventMapper.mapToShortDto(event, confirmedR, view);
+            return EventMapper.mapToShortDto(event, confirmedR, view, comments.get(event.getId()).size());
         }).toList();
     }
 
@@ -579,7 +562,7 @@ public class EventServiceImpl implements EventService {
 
             if (eventDateToCheck.isBefore(now.plusHours(1))) {
                 throw new ValidationException("Дата начала события должна быть не ранее чем за час от даты публикации. " +
-                                "Дата события: " + eventDateToCheck + ", Текущее время: " + now
+                        "Дата события: " + eventDateToCheck + ", Текущее время: " + now
                 );
             }
         }
