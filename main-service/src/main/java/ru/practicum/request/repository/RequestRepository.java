@@ -46,7 +46,5 @@ public interface RequestRepository extends JpaRepository<Request, Long>, Queryds
 
     Boolean existsByRequesterIdAndEventId(Long userId, Long eventId);
 
-    @Modifying
-    @Query("UPDATE Request r SET r.status = :status WHERE r.id IN :ids")
-    int updateStatusByIds(@Param("ids") List<Long> ids, @Param("status") RequestStatus status);
+    Optional<Request> findByRequesterIdAndEventIdAndStatus(long authorId, long eventId, RequestStatus requestStatus);
 }
