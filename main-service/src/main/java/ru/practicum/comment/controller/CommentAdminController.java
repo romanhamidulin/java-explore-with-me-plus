@@ -16,8 +16,8 @@ public class CommentAdminController {
     private final CommentService commentService;
 
     @GetMapping
-    public List<CommentDto> adminPendigCommentList() {
-        return commentService.adminPendigCommentList();
+    public List<CommentDto> adminPendigCommentList(@RequestParam(required = false) List<Long> users) {
+        return commentService.adminPendigCommentList(users);
     }
 
     @PatchMapping("/{commentId}")
@@ -25,4 +25,5 @@ public class CommentAdminController {
                                                @Valid @RequestBody AdminUpdateCommentStatusDto dto) {
         return commentService.adminUpdateCommentStatus(commentId, dto);
     }
+
 }

@@ -98,7 +98,13 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public List<CommentDto> adminPendigCommentList() {
+    public List<CommentDto> adminPendigCommentList(List<Long> usersId) {
+        if (usersId != null && !usersId.isEmpty()) {
+            return commentRepository.findByAuthor_IdInAndStatus(usersId, CommentStatus.PENDING)
+                    .stream()
+                    .map(CommentMapper::toDto)
+                    .toList();
+        }
         return commentRepository.findAllByStatus(CommentStatus.PENDING)
                 .stream()
                 .map(CommentMapper::toDto)

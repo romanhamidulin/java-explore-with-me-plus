@@ -15,5 +15,5 @@ public interface CommentService {
 
     CommentDto adminUpdateCommentStatus(Long commentId, AdminUpdateCommentStatusDto dto);
 
-    List<CommentDto> adminPendigCommentList();
+    List<CommentDto> adminPendigCommentList(List<Long> usersId);
 }
