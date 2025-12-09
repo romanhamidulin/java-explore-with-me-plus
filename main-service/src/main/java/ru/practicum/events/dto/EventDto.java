@@ -3,12 +3,12 @@ package ru.practicum.events.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import ru.practicum.category.dto.CategoryDto;
-//import ru.practicum.comment.dto.CommentDto;
+import ru.practicum.comment.dto.CommentDto;
 import ru.practicum.events.model.EventState;
 import ru.practicum.user.dto.UserShortDto;
 
 import java.time.LocalDateTime;
-//import java.util.List;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -44,5 +44,5 @@ public class EventDto {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime publishedOn;
 
-//    private List<CommentDto> comments;
+    private List<CommentDto> comments;
 }

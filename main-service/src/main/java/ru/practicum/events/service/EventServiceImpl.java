@@ -101,7 +101,7 @@ public class EventServiceImpl implements EventService {
         EventDto res = EventMapper.toEventDto(event);
         res.setConfirmedRequests(requestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED));
 
-//        res.setComments(new ArrayList<>());
+        res.setComments(new ArrayList<>());
 
         return res;
     }
@@ -121,7 +121,7 @@ public class EventServiceImpl implements EventService {
         List<CommentDto> comments = commentRepository.findByEventIdAndStatus(eventId, CommentStatus.PUBLISHED).stream()
                 .map(CommentMapper::toDto)
                 .toList();
-//        res.setComments(comments);
+        res.setComments(comments);
 
         return res;
     }
@@ -198,7 +198,7 @@ public class EventServiceImpl implements EventService {
         List<CommentDto> comments = commentRepository.findByEventIdAndStatus(eventId, CommentStatus.PUBLISHED).stream()
                 .map(CommentMapper::toDto)
                 .toList();
-//        res.setComments(comments);
+        res.setComments(comments);
 
         return res;
     }
@@ -275,7 +275,7 @@ public class EventServiceImpl implements EventService {
                 .toList();
 
         EventDto eventDto = EventMapper.mapToDto(event, countOfConfirmed, countOfViews);
-//        eventDto.setComments(comments);
+        eventDto.setComments(comments);
 
         EndpointHitDto hitDto = EndpointHitDto.builder()
                 .app("main-service")
@@ -447,7 +447,7 @@ public class EventServiceImpl implements EventService {
             EventDto dto = EventMapper.mapToDto(event, confirmedR, view);
 
             List<CommentDto> comments = commentsMap.get(event.getId());
-//            dto.setComments(comments != null ? comments : Collections.emptyList());
+            dto.setComments(comments != null ? comments : Collections.emptyList());
 
             return dto;
         }).collect(Collectors.toList());
@@ -496,7 +496,7 @@ public class EventServiceImpl implements EventService {
         List<CommentDto> comments = commentRepository.findByEventIdAndStatus(eventId, CommentStatus.PUBLISHED).stream()
                 .map(CommentMapper::toDto)
                 .toList();
-//        result.setComments(comments);
+        result.setComments(comments);
 
         return result;
 

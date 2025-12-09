@@ -56,7 +56,7 @@ public class EventMapper {
                         .id(event.getInitiator().getId())
                         .name(event.getInitiator().getName())
                         .build())
-//                .countOfComments(countOfComments)
+                .countOfComments(countOfComments)
                 .eventDate(event.getEventDate());
 
         if (event.getCategory() != null) {
