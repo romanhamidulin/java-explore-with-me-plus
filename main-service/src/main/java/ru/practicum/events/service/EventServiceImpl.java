@@ -375,7 +375,8 @@ public class EventServiceImpl implements EventService {
         return events.stream().map(event -> {
             Long confirmedR = confirmedRequests.get(event.getId());
             Long view = views.get(event.getId());
-            return EventMapper.mapToShortDto(event, confirmedR, view, comments.get(event.getId()).size());
+            return EventMapper.mapToShortDto(event, confirmedR, view,
+                    comments.getOrDefault(event.getId(), Collections.emptyList()).size());
         }).toList();
     }
 
