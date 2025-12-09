@@ -11,7 +11,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(path = "admin/comments")
+@RequestMapping(path = "/admin/comments")
 public class CommentAdminController {
     private final CommentService commentService;
 
