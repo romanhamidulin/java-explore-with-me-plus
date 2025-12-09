@@ -14,6 +14,7 @@ import java.time.format.DateTimeFormatter;
 @UtilityClass
 public class CommentMapper {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     public Comment toComment(NewCommentDto newCommentDto, User author, Event event) {
         return Comment.builder()
                 .text(newCommentDto.getText())
