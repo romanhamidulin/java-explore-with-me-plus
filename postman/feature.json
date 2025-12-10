@@ -392,8 +392,10 @@
               "    pm.response.to.be.json;",
               "});",
               "",
+              "const responseBody = pm.response.json();",
+              "",
               "pm.test(\"Ответ должен быть массивом\", function () {",
-              "    pm.expect(responseBody).to.be.an('array');",
+              "     pm.expect(Array.isArray(responseBody)).to.be.true;",
               "});"
             ],
             "type": "text/javascript",
