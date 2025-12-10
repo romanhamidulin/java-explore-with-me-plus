@@ -44,7 +44,7 @@ public class EventMapper {
         return builder.build();
     }
 
-    public static EventShortDto mapToShortDto(Event event, Long confirmedRequest, Long views) {
+    public static EventShortDto mapToShortDto(Event event, Long confirmedRequest, Long views, Integer countOfComments) {
         EventShortDto.EventShortDtoBuilder builder = EventShortDto.builder()
                 .id(event.getId())
                 .title(event.getTitle())
@@ -56,6 +56,7 @@ public class EventMapper {
                         .id(event.getInitiator().getId())
                         .name(event.getInitiator().getName())
                         .build())
+                .countOfComments(countOfComments)
                 .eventDate(event.getEventDate());
 
         if (event.getCategory() != null) {

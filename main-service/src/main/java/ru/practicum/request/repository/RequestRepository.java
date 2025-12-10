@@ -1,7 +1,6 @@
 package ru.practicum.request.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.query.Param;
@@ -46,7 +45,5 @@ public interface RequestRepository extends JpaRepository<Request, Long>, Queryds
 
     Boolean existsByRequesterIdAndEventId(Long userId, Long eventId);
 
-    @Modifying
-    @Query("UPDATE Request r SET r.status = :status WHERE r.id IN :ids")
-    int updateStatusByIds(@Param("ids") List<Long> ids, @Param("status") RequestStatus status);
+    Optional<Request> findByRequesterIdAndEventIdAndStatus(long authorId, long eventId, RequestStatus requestStatus);
 }
